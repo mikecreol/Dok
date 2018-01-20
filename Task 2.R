@@ -8,7 +8,6 @@ Data <- fillNAsWithUpperCell(DataList[[2]])
 A <- mapply(summaryDoc, Data, colnames(Data))
 listToExcel(A, filename = "./Output/SummaryStats v1.xlsx", rowNames = FALSE)
 
-
 # 2.1. ПО и ЕОД изследване, преди и след изолиране със силикон. T-Test. Ще установим, че няма разлика.
 #-------------------------------------------------------------------------------
 
