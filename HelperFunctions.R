@@ -29,10 +29,16 @@ summaryDoc <- function(x, varName = deparse(substitute(x))){
   return(Df)
 }
 
-listToExcel <- function(List, filename, ...){
+listToExcel <- function(List, filename, sheetname, ...){
   # Outputs a list of dataframese to Excel
-  wb <- createWorkbook()
-  addWorksheet(wb, "Sheet 1")
+  # wb <- createWorkbook()
+  # addWorksheet(wb, "Sheet 1")
+  
+  if(file.exists(filename)){
+    wb <- loadWorkbook(filename)
+  } else {
+    wb <- loadWorkbook(filename, create = TRUE)
+  }
   
   startRow = 1
   for(i in 1:length(List)){
@@ -42,15 +48,17 @@ listToExcel <- function(List, filename, ...){
       Df <- as.data.frame(List[[i]])
     }
     
-    writeData(wb,
-              Df,
-              sheet = "Sheet 1",
-              startRow = startRow,
-              ...)
+    # writeData(wb,
+    #           Df,
+    #           sheet = "Sheet 1",
+    #           startRow = startRow,
+    #           ...)
+    
+    writeWorksheetToFile(filename, Df, sheet = sheetname, startRow = startRow)
     startRow = 4 + nrow(Df) + startRow
   }
   
-  saveWorkbook(wb, filename, overwrite = TRUE)
+  # saveWorkbook(wb, filename, overwrite = TRUE)
 }
 
 percent <- function(x, digits = 2, format = "f", ...) {
@@ -67,3 +75,65 @@ fillNAsWithUpperCell <- function(Df){
   
   return(Df)
 }
+
+
+tukeyHSD.ByGroup <- function(var, groups, data1){
+  
+  f1 <- formula(paste(var, "~", groups))
+  a1 <- aov(f1, data = data1)
+  a <- TukeyHSD(a1)
+  
+  p_adj <- a[[1]][ , "p adj"]
+  signif <- ifelse(p_adj <= 0.05, "Significant", "Non Significant")
+  res <- data.frame(P.Adj = p_adj, Significance = signif)
+  res$Comparisons <- row.names(res)
+  res <- res[, c("Comparisons", "P.Adj", "Significance")]
+  
+  return(res)
+}
+
+
+CI <- function(x) {
+  
+  n <- length(na.omit(x))
+  mean <- mean(x, na.rm = T)
+  sd <- sd(x, na.rm = T)
+  se <- sd / sqrt(n)
+  me <- qnorm(.975) * se
+  low95ci <- mean - me
+  high95ci <- mean + me
+  
+  Df <- as.data.frame(cbind(low95ci, high95ci))
+  colnames(Df) <- c("low 95 CI", "high 95 CI")
+  
+  return(Df)
+}
+
+
+ttest_res <- function(tt) {
+  
+  h0 <- c("difference in means is equal to 0")
+  alt <- tt$alternative
+  t.value <- round(tt$statistic, 4)
+  df <- round(tt$parameter, 4)
+  p.value <- round(tt$p.value, 4)
+  ci_low95 <- round(tt$conf.int[1], 4)
+  ci_high95 <- round(tt$conf.int[2], 4)
+  if(length(tt$estimate) == 1){
+    mean_of_the_differences <- tt$estimate
+  } else {
+    mean.x <- round(tt$estimate[[1]], 4)
+    mean.y <- round(tt$estimate[[2]], 4)
+  }
+  
+  if(length(tt$estimate) == 1){
+    res <- as.data.frame(cbind(h0, alt, t.value, df, p.value, ci_low95, ci_high95, mean_of_the_differences))
+  } else {
+    res <- as.data.frame(cbind(h0, alt, t.value, df, p.value, ci_low95, ci_high95, mean.x, mean.y))
+    }
+
+  return(res)
+  
+}
+
+

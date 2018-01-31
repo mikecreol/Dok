@@ -19,7 +19,11 @@ library(gtools)
 library(stringi)
 library(psych)
 library(xtable)
+library(XLConnect)
+library(ggplot2)
+library(reshape2)
 
+setwd("F:\\Dentist_project\\Dok")
 #-----------------------------------------------------------------------------------------------
 
 source("HelperFunctions.R")
