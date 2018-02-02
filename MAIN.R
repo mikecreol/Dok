@@ -23,14 +23,14 @@ library(XLConnect)
 library(ggplot2)
 library(reshape2)
 
-setwd("F:\\Dentist_project\\Dok")
+
 #-----------------------------------------------------------------------------------------------
 
 source("HelperFunctions.R")
 
 #-----------------------------------------------------------------------------------------------
 
-source("DataImport.R")
+# source("DataImport.R")
 # source("DataPrep.R")
 
 

@@ -18,6 +18,7 @@ listToExcel(A, filename = "./Output/SummaryStats v1.xlsx", sheetname = "2")
 POsummary <- summaryDoc(Data$ПО, varName="ПО")
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", POsummary, sheet = "2_ПО", startRow = 1)
 
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", CIquantile(Data$ПО, 5), sheet = "2_ПО", startRow = 20)
 
 plot_obj <- ggplot(data=Data, aes(Data$ПО)) + 
   geom_histogram(breaks=seq(8, 101, by=3), 
@@ -53,14 +54,14 @@ boxplot.stats(Data$ЕОД.преди)
 boxplot.stats(Data$ЕОД.след)
 
 # ПО преди и след
-t1 <- t.test(Data$ПО.преди, Data$ПО.след, paired = TRUE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
-t2 <- t.test(Data$ПО.преди, Data$ПО.след, paired = TRUE, alt = "greater", conf.level = 0.95) # p-value = 0.01007
+t1 <- t.test(Data$ПО.преди, Data$ПО.след, paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
+t2 <- t.test(Data$ПО.преди, Data$ПО.след, paired = FALSE, alt = "greater", conf.level = 0.95) # p-value = 0.01007
 PO_two.sided <- ttest_res(t1)
 PO_greater <- ttest_res(t2)
 
 # ЕОД преди и след
-t3 <- t.test(Data$ЕОД.преди, Data$ЕОД.след, paired = TRUE, alt = "two.sided", conf.level = 0.95) # p-value = 0.01682
-t4 <- t.test(Data$ЕОД.преди, Data$ЕОД.след, paired = TRUE, alt = "greater", conf.level = 0.95) # p-value = 0.008408
+t3 <- t.test(Data$ЕОД.преди, Data$ЕОД.след, paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.01682
+t4 <- t.test(Data$ЕОД.преди, Data$ЕОД.след, paired = FALSE, alt = "greater", conf.level = 0.95) # p-value = 0.008408
 EOD_two.sided <- ttest_res(t3)
 EOD_greater <- ttest_res(t4)
 

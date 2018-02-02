@@ -5,7 +5,6 @@
 *.RData
 *.csv
 *.xls
-*.xlsx
 *.sav
 *.png
 *.docx
@@ -15,3 +14,5 @@
 *.pdf
 *.html
 backup/
+Data/
+Output/
