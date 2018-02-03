@@ -77,11 +77,11 @@ fillNAsWithUpperCell <- function(Df){
 }
 
 
-tukeyHSD.ByGroup <- function(var, groups, data1){
+tukeyHSD.ByGroup <- function(var, groups, data1, ...){
   
   f1 <- formula(paste(var, "~", groups))
   a1 <- aov(f1, data = data1)
-  a <- TukeyHSD(a1)
+  a <- TukeyHSD(a1, ...)
   
   p_adj <- a[[1]][ , "p adj"]
   signif <- ifelse(p_adj <= 0.05, "Significant", "Non Significant")
@@ -134,6 +134,15 @@ ttest_res <- function(tt) {
 
   return(res)
   
+}
+
+CIquantile <- function(vec, perc){
+  # the probability for the confidence interval
+  q <- quantile(vec, seq(0, 1, perc / (2 * 100))) # by a hundred because it takes percentage value
+  returnVec <- c(q[2], q[length(q) - 1])
+  names(returnVec) <- c(paste0("CI_", perc, "%_Low"), paste0("CI_", perc, "%_High"))
+  returnDf <- as.data.frame(t(returnVec))
+  return(returnDf)
 }
 
 
