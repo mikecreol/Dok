@@ -95,23 +95,16 @@ POmeans <- plotmeans(PO ~ Period, data = POdata,
 # 4.3. Корелация ЕОД и ПО по периоди.
 #-------------------------------------------------------------------------------
 # Correlations - by groups
-cor_EOD <- data.frame(cor(plotData[,c(1:5)], use = "pairwise.complete.obs", method = "pearson"))
-cor_EOD$Labels <- row.names(cor_EOD)
-cor_EOD <- cor_EOD[, c(6,1:5)]
-
-cor_PO <- data.frame(cor(plotData[,c(6:10)], use = "pairwise.complete.obs", method = "pearson"))
-cor_PO$Labels <- row.names(cor_PO)
-cor_PO <- cor_PO[, c(6,1:5)]
+cor_by_periods <- data.frame(cor(plotData, use = "pairwise.complete.obs", method = "pearson"))
+cor_by_periods$Labels <- row.names(cor_by_periods)
+cor_by_periods <- cor_by_periods[, c(11,1:10)]
 
 
 startrow <- 1
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", "Корелации по периоди (ЕОД)", sheet = "4.3", startRow = startrow)
 startrow <- startrow + 2
-writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", cor_EOD, sheet = "4.3", startRow = startrow, rownames = TRUE)
-startrow <- startrow + nrow(cor_EOD) + 4
-writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", "Корелации по периоди (ПО)", sheet = "4.3", startRow = startrow)
-startrow <- startrow + 2
-writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", cor_PO, sheet = "4.3", startRow = startrow, rownames = TRUE)
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", cor_by_periods, sheet = "4.3", startRow = startrow, rownames = TRUE)
+
 
 
 # 4.4. Т тест. От "4 референтни" да сравня има ли разлика между кореново развитие 0 и 1 на ЕОД и ПО. 
@@ -121,21 +114,22 @@ writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", cor_PO, sheet = "4.
 df1 <- Data2[Data2$корен.развитие == "незавършено",]
 df2 <- Data2[Data2$корен.развитие == "завършено",]
 
-t1 <- t.test(df1$ЕОД, df1$ПО, paired = FALSE, alt = "two.sided", conf.level = 0.95)
-t2 <- t.test(df2$ЕОД, df2$ПО, paired = FALSE, alt = "two.sided", conf.level = 0.95)
+t1 <- t.test(df1$ЕОД, df2$ЕОД, paired = FALSE, alt = "two.sided", conf.level = 0.95)
+t2 <- t.test(df1$ПО, df2$ПО, paired = FALSE, alt = "two.sided", conf.level = 0.95)
 
 t1res <- ttest_res(t1)
-t1res$Label <- "Незавършено кореново развитие"
+t1res$Label <- "Сравняване средното на ЕОД при незавършено и завършено кор.развитие"
 cols <- colnames(t1res)
 t1res <- cbind(t1res[, ncol(t1res)], t1res[,-ncol(t1res)])
 colnames(t1res) <- c(cols[length(cols)], cols[-length(cols)])
-
+t1res <- MyHelperFunctions::myRename(t1res, c("mean.x", "mean.y"), c("MeanEOD_nezav.kor.razv", "MeanEOD_zav.kor.razv"))
 
 t2res <- ttest_res(t2)
-t2res$Label <- "Завършено кореново развитие"
+t2res$Label <- "Сравняване средното на ПО при незавършено и завършено кор.развитие"
 cols <- colnames(t2res)
 t2res <- cbind(t2res[, ncol(t2res)], t2res[,-ncol(t2res)])
 colnames(t2res) <- c(cols[length(cols)], cols[-length(cols)])
+t2res <- MyHelperFunctions::myRename(t2res, c("mean.x", "mean.y"), c("MeanPO_nezav.kor.razv", "MeanPO_zav.kor.razv"))
 
 startrow <- 2
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t1res, sheet = "4.4", startRow = startrow)

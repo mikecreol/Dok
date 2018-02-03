@@ -5,10 +5,10 @@
 
 Data <- fillNAsWithUpperCell(DataList[[2]])
 # View(describe(Data))
-Data$Пол <- as.factor(Data$Пол)
+Data$Пол <- factor(Data$Пол, labels = c("Ж", "М"))
 Data$Пушач <- as.factor(Data$Пушач)
 Data$`Зъбен.№` <- as.factor(Data$`Зъбен.№`)
-Data$Зъбна.група <- as.factor(Data$Зъбна.група)
+Data$Зъбна.група <- factor(Data$Зъбна.група, labels = c("фронт ГЧ", "премолари ГЧ", "молари ГЧ", "фронт ДЧ", "премолари ДЧ", "молари ДЧ"))
 
 # дескриптивна статистика, здрави зъби (всички пром.)
 A <- mapply(summaryDoc, Data[-1], colnames(Data)[-1])
@@ -68,11 +68,11 @@ EOD_greater <- ttest_res(t4)
 startrow <- 2
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_two.sided, sheet = "2.1", startRow = startrow)
 startrow = 4 + nrow(PO_two.sided) + startrow
-writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_greater, sheet = "2.1", startRow = startrow)
-startrow = 4 + nrow(PO_greater) + startrow
+# writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_greater, sheet = "2.1", startRow = startrow)
+# startrow = 4 + nrow(PO_greater) + startrow
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", EOD_two.sided, sheet = "2.1", startRow = startrow)
-startrow = 4 + nrow(EOD_two.sided) + startrow
-writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", EOD_greater, sheet = "2.1", startRow = startrow)
+# startrow = 4 + nrow(EOD_two.sided) + startrow
+# writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", EOD_greater, sheet = "2.1", startRow = startrow)
 
 
 # 2.2. Mean, SD, SE, по групи зъби. Корелация между ЕОД и ПО по групи (в колона зъбна група). 
@@ -116,8 +116,13 @@ corData <- rbind(cor_groups, cor_total)
 
 TukeyPO <- tukeyHSD.ByGroup(var = "ПО", groups = "Зъбна.група", ReducedData)
 
-writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", descrData, sheet = "2.2", startRow = 1)
-writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", corData, sheet = "2.2", startRow = nrow(descrData) + 4)
+startrow <- 1
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", descrData, sheet = "2.2", startRow = startrow)
+startrow <- startrow + nrow(descrData) + 4
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", "Корелация между ПО и ЕОД (по зъбна група)", sheet = "2.2", startRow = startrow)
+startrow <- startrow + 1
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", corData, sheet = "2.2", startRow = startrow)
+startrow <- startrow + nrow(corData) + 4
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", TukeyPO, sheet = "2.2", 
-                     startRow = nrow(descrData) + nrow(corData) + 7)
+                     startRow = startrow)
 

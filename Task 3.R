@@ -45,11 +45,14 @@ startrow <- 2
 
 for (i in 1:3){
   data1 <- data.frame(diagnoses[[i]])
-  listCI <- apply(data1[,c("ПО", "ЕОД")], 2, FUN = CI)
+  diag.label <- unique(data1$Диагноза)
+  listCI <- apply(data1[,c("ПО", "ЕОД")], 2, function(x) CIquantile(vec = x, perc=5))
   CIdf <- rbind(listCI[[1]], listCI[[2]])
   CIdf$Label <- c("ПО", "ЕОД")
   CIdf <- CIdf[, c(3,1,2)]
   
+  writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", data.frame("Диазгноза" = diag.label), sheet = "3.1", startRow = startrow)
+  startrow = startrow + 2
   writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", CIdf, sheet = "3.1", startRow = startrow)
   startrow = 4 + nrow(CIdf) + startrow
 }
@@ -67,22 +70,29 @@ startrow <- 2
 
 for (i in 1:3){
   data1 <- data.frame(diagnoses[[i]])
-
+  diag.label <- unique(data1$Диагноза)
+  
   t1 <- t.test(Intaktni$ПО, data1$ПО, paired = FALSE, alt = "two.sided", conf.level = 0.95)
   t2 <- t.test(Intaktni$ЕОД, data1$ЕОД, paired = FALSE, alt = "two.sided", conf.level = 0.95)
   
   PO_ttest <- ttest_res(t1)
-  PO_ttest$comparison <- "ПО"
+  PO_ttest$comparison <- "сравняване средното на ПО за интактни и зъби с пулпити"
   cols <- colnames(PO_ttest)
   PO_ttest <- cbind(PO_ttest[, ncol(PO_ttest)], PO_ttest[,-ncol(PO_ttest)])
   colnames(PO_ttest) <- c(cols[length(cols)], cols[-length(cols)])
+  PO_ttest <- MyHelperFunctions::myRename(PO_ttest, c("mean.x", "mean.y"), c("MeanPO_Intaktni", "MeanPO_pulpiti"))
+
   
   EOD_ttest <- ttest_res(t2)
-  EOD_ttest$comparison <- "ЕОД"
+  EOD_ttest$comparison <- "сравняване средното на ЕОД за интактни и зъби с пулпити"
   cols <- colnames(EOD_ttest)
   EOD_ttest <- cbind(EOD_ttest[, ncol(EOD_ttest)], EOD_ttest[,-ncol(EOD_ttest)])
   colnames(EOD_ttest) <- c(cols[length(cols)], cols[-length(cols)])
+  EOD_ttest <- MyHelperFunctions::myRename(EOD_ttest, c("mean.x", "mean.y"), c("MeanEOD_Intaktni", "MeanEOD_pulpiti"))
   
+  
+  writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", data.frame("Диазгноза" = diag.label), sheet = "3.2", startRow = startrow)
+  startrow = startrow + 2
   writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_ttest, sheet = "3.2", startRow = startrow)
   startrow = 3 + nrow(PO_ttest) + startrow
   writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", EOD_ttest, sheet = "3.2", startRow = startrow)
