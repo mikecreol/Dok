@@ -55,15 +55,17 @@ boxplot.stats(Data$ЕОД.след)
 
 # ПО преди и след
 t1 <- t.test(Data$ПО.преди, Data$ПО.след, paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
-t2 <- t.test(Data$ПО.преди, Data$ПО.след, paired = FALSE, alt = "greater", conf.level = 0.95) # p-value = 0.01007
+# t2 <- t.test(Data$ПО.преди, Data$ПО.след, paired = FALSE, alt = "greater", conf.level = 0.95) # p-value = 0.01007
 PO_two.sided <- ttest_res(t1)
-PO_greater <- ttest_res(t2)
+# PO_greater <- ttest_res(t2)
+PO_two.sided <- MyHelperFunctions::myRename(PO_two.sided, c("mean.x", "mean.y"), c("MeanPO_before", "MeanPO_after"))
 
 # ЕОД преди и след
 t3 <- t.test(Data$ЕОД.преди, Data$ЕОД.след, paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.01682
-t4 <- t.test(Data$ЕОД.преди, Data$ЕОД.след, paired = FALSE, alt = "greater", conf.level = 0.95) # p-value = 0.008408
+# t4 <- t.test(Data$ЕОД.преди, Data$ЕОД.след, paired = FALSE, alt = "greater", conf.level = 0.95) # p-value = 0.008408
 EOD_two.sided <- ttest_res(t3)
-EOD_greater <- ttest_res(t4)
+# EOD_greater <- ttest_res(t4)
+EOD_two.sided <- MyHelperFunctions::myRename(EOD_two.sided, c("mean.x", "mean.y"), c("MeanEOD_before", "MeanEOD_after"))
 
 startrow <- 2
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_two.sided, sheet = "2.1", startRow = startrow)
@@ -120,7 +122,7 @@ startrow <- 1
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", descrData, sheet = "2.2", startRow = startrow)
 startrow <- startrow + nrow(descrData) + 4
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", "Корелация между ПО и ЕОД (по зъбна група)", sheet = "2.2", startRow = startrow)
-startrow <- startrow + 1
+startrow <- startrow + 2
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", corData, sheet = "2.2", startRow = startrow)
 startrow <- startrow + nrow(corData) + 4
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", TukeyPO, sheet = "2.2", 
