@@ -14,6 +14,7 @@ Data1$Посока <- factor(Data1$Посока, labels = c("отдолу", "ф�
 Data1$Цвят.на.пулпата <- factor(Data1$Цвят.на.пулпата, labels = c("розов"))
 Data1$Кореново.развитие <- factor(Data1$Кореново.развитие, labels = c("незавършено", "завършено"))
 Data1$Стадий.на.корен.разв. <- factor(Data1$Стадий.на.корен.разв., labels = c("до 2/3", "изграден корен с отворен апекс", "завършено"))
+Data1$flag <- replaceValues(Data1$flag, NA, 0)
 
 num.columns <- c("Пациент.номер", "Възраст", "Пулпно.разкритие", 
                  "ЕОД.1д", "ЕОД.15д", "ЕОД.30д", "ЕОД.3м", "ЕОД.6м", 
@@ -111,11 +112,8 @@ writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", cor_by_periods, she
 # И оттам взимаме референтните стойности, които сравняваме с 6тия месец на 4 травми, което е в точка 4.4. Евентуално разбити по диагнози.
 #-------------------------------------------------------------------------------
 
-df1 <- Data2[Data2$корен.развитие == "незавършено",]
-df2 <- Data2[Data2$корен.развитие == "завършено",]
-
-t1 <- t.test(df1$ЕОД, df2$ЕОД, paired = FALSE, alt = "two.sided", conf.level = 0.95)
-t2 <- t.test(df1$ПО, df2$ПО, paired = FALSE, alt = "two.sided", conf.level = 0.95)
+t1 <- t.test(ЕОД ~ корен.развитие, data = Data2, paired = FALSE, alt = "two.sided", conf.level = 0.95)
+t2 <- t.test(ПО ~ корен.развитие, data = Data2, paired = FALSE, alt = "two.sided", conf.level = 0.95)
 
 t1res <- ttest_res(t1)
 t1res$Label <- "Сравняване средното на ЕОД при незавършено и завършено кор.развитие"
@@ -142,9 +140,82 @@ writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t2res, sheet = "4.4
 # По групи зъби (??? какви са тези групи) и диагнози (може и да не може да стане).
 #-------------------------------------------------------------------------------
 
+t1_all <- t.test(subset(Data1, !(flag == 1), ПО.6м), Data2$ПО, paired = FALSE, alt = "two.sided", conf.level = 0.95)
+t1_kids <- t.test(subset(Data1, !(flag == 1) & Възраст %in% c(7:12), ПО.6м), 
+                  subset(Data2, Възраст %in% c(7:12), ПО), 
+                  paired = FALSE, alt = "two.sided", conf.level = 0.95)
+# t1_adults <- t.test(subset(Data1, !(flag == 1) & Възраст > 12, ПО.6м), 
+#                     subset(Data2, Възраст > 12, ПО), 
+#                     paired = FALSE, alt = "two.sided", conf.level = 0.95)       # data1=19, data2=0
+
+
+t2_all <- t.test(subset(Data1, !(flag == 1), ЕОД.6м), Data2$ЕОД, paired = FALSE, alt = "two.sided", conf.level = 0.95)
+t2_kids <- t.test(subset(Data1, !(flag == 1) & Възраст %in% c(7:12), ЕОД.6м), 
+                  subset(Data2, Възраст %in% c(7:12), ЕОД), 
+                  paired = FALSE, alt = "two.sided", conf.level = 0.95)
+# t2_adults <- t.test(subset(Data1, !(flag == 1) & Възраст > 12, ЕОД.6м), 
+#                     subset(Data2, Възраст > 12, ЕОД), 
+#                     paired = FALSE, alt = "two.sided", conf.level = 0.95)        # data1=19, data2=0
+
+
+# output ttest results
+t1_all_res <- ttest_res(t1_all)
+t1_all_res$Label <- "Сравняване средното на ПО 6м (травми) и ПО (референтни) - ALL"
+cols <- colnames(t1_all_res)
+t1_all_res <- cbind(t1_all_res[, ncol(t1_all_res)], t1_all_res[,-ncol(t1_all_res)])
+colnames(t1_all_res) <- c(cols[length(cols)], cols[-length(cols)])
+t1_all_res <- MyHelperFunctions::myRename(t1_all_res, c("mean.x", "mean.y"), c("Mean ПО 6м травми", "Mean ПО референтни"))
+
+t1_kids_res <- ttest_res(t1_kids)
+t1_kids_res$Label <- "Сравняване средното на ПО 6м (травми) и ПО (референтни) - KIDS(7-12)"
+cols <- colnames(t1_kids_res)
+t1_kids_res <- cbind(t1_kids_res[, ncol(t1_kids_res)], t1_kids_res[,-ncol(t1_kids_res)])
+colnames(t1_kids_res) <- c(cols[length(cols)], cols[-length(cols)])
+t1_kids_res <- MyHelperFunctions::myRename(t1_kids_res, c("mean.x", "mean.y"), c("Mean ПО 6м травми", "Mean ПО референтни"))
+
+# t1_adults_res <- ttest_res(t1_adults)
+# t1_adults_res$Label <- "Сравняване средното на ПО 6м (травми) и ПО (референтни) - ADULTS(13+)"
+# cols <- colnames(t1_adults_res)
+# t1_adults_res <- cbind(t1_adults_res[, ncol(t1_adults_res)], t1_adults_res[,-ncol(t1_adults_res)])
+# colnames(t1_adults_res) <- c(cols[length(cols)], cols[-length(cols)])
+# t1_adults_res <- MyHelperFunctions::myRename(t1_adults_res, c("mean.x", "mean.y"), c("Mean ПО 6м травми", "Mean ПО референтни"))
 
 
 
+t2_all_res <- ttest_res(t2_all)
+t2_all_res$Label <- "Сравняване средното на ЕОД 6м (травми) и ЕОД (референтни) - ALL"
+cols <- colnames(t2_all_res)
+t2_all_res <- cbind(t2_all_res[, ncol(t2_all_res)], t2_all_res[,-ncol(t2_all_res)])
+colnames(t2_all_res) <- c(cols[length(cols)], cols[-length(cols)])
+t2_all_res <- MyHelperFunctions::myRename(t2_all_res, c("mean.x", "mean.y"), c("Mean ЕОД 6м травми", "Mean ЕОД референтни"))
 
+t2_kids_res <- ttest_res(t2_kids)
+t2_kids_res$Label <- "Сравняване средното на ЕОД 6м (травми) и ЕОД (референтни) - KIDS(7-12)"
+cols <- colnames(t2_kids_res)
+t2_kids_res <- cbind(t2_kids_res[, ncol(t2_kids_res)], t2_kids_res[,-ncol(t2_kids_res)])
+colnames(t2_kids_res) <- c(cols[length(cols)], cols[-length(cols)])
+t2_kids_res <- MyHelperFunctions::myRename(t2_kids_res, c("mean.x", "mean.y"), c("Mean ЕОД 6м травми", "Mean ЕОД референтни"))
+
+# t2_adults_res <- ttest_res(t2_adults)
+# t2_adults_res$Label <- "Сравняване средното на ЕОД 6м (травми) и ЕОД (референтни) - ADULTS(13+)"
+# cols <- colnames(t2_adults_res)
+# t2_adults_res <- cbind(t2_adults_res[, ncol(t2_adults_res)], t2_adults_res[,-ncol(t2_adults_res)])
+# colnames(t2_adults_res) <- c(cols[length(cols)], cols[-length(cols)])
+# t2_adults_res <- MyHelperFunctions::myRename(t2_adults_res, c("mean.x", "mean.y"), c("Mean ЕОД 6м травми", "Mean ЕОД референтни"))
+
+
+startrow <- 2
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t1_all_res, sheet = "4.5", startRow = startrow)
+startrow = 4 + nrow(t1_all_res) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t1_kids_res, sheet = "4.5", startRow = startrow)
+startrow = 4 + nrow(t1_kids_res) + startrow
+# writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t1_adults_res, sheet = "4.5", startRow = startrow)
+# startrow = 4 + nrow(t1_adults_res) + startrow
+
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t2_all_res, sheet = "4.5", startRow = startrow)
+startrow = 4 + nrow(t2_all_res) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t2_kids_res, sheet = "4.5", startRow = startrow)
+# startrow = 4 + nrow(t2_kids_res) + startrow
+# writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t2_adults_res, sheet = "4.5", startRow = startrow)
 
 
