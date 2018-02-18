@@ -42,20 +42,22 @@ listToExcel(A, filename = "./Output/SummaryStats v1.xlsx", sheetname = "4.реф
 
 # 4.1. Графика на средните по периоди (В динамика) 
 #-------------------------------------------------------------------------------
+Data1 <- Data1[!(Data1$flag == 1), ]
 
 plotData <- Data1[, c("ЕОД.1д", "ЕОД.15д", "ЕОД.30д", "ЕОД.3м", "ЕОД.6м", "ПО.1д", "ПО.15д", "ПО.30д", "ПО.3м", "ПО.6м")]
 EODdata <- melt(data = plotData[,c(1:5)], measure.vars = c(1:5), variable.name = "Period", value.name = "EOD")
 EODdata[,"Period"] <- gsub("[[:punct:]]", "", EODdata[,"Period"])
 EODdata[,"Period"] <- gsub("[ЕОД]", "", EODdata[,"Period"])
 EODdata[,"Period"] <- replaceValues(EODdata$Period, c("1д", "15д", "30д", "3м", "6м"), c(1,2,3,4,5))
-EODdata$Period <- as.numeric(EODdata$Period)
+# EODdata$Period <- as.numeric(EODdata$Period)
+EODdata$Period <- factor(EODdata$Period, labels = c("1д", "15д", "30д", "3м", "6м"))
 
 POdata <- melt(data = plotData[,c(6:10)], measure.vars = c(1:5), variable.name = "Period", value.name = "PO")
 POdata[,"Period"] <- gsub("[[:punct:]]", "", POdata[,"Period"])
 POdata[,"Period"] <- gsub("[ПО]", "", POdata[,"Period"])
 POdata[,"Period"] <- replaceValues(POdata$Period, c("1д", "15д", "30д", "3м", "6м"), c(1,2,3,4,5))
-POdata$Period <- as.numeric(POdata$Period)
-
+# POdata$Period <- as.numeric(POdata$Period)
+POdata$Period <- factor(POdata$Period, labels = c("1д", "15д", "30д", "3м", "6м"))
 
 EODmeans <- plotmeans(EOD ~ Period, data = EODdata, 
                       mean.labels = TRUE, 
@@ -86,10 +88,109 @@ POmeans <- plotmeans(PO ~ Period, data = POdata,
 # (може да махнем тези които не реагират; 5 оранжеви реда)
 #-------------------------------------------------------------------------------
 
-# Data42 <- Data1[!(Data1$flag == 1), ]
+##### Comparisons by Periods with TUKEY
+TukeyEODbyPeriods <- tukeyHSD.ByGroup(var = "EOD", groups = "Period", EODdata)
+TukeyPObyPeriods <- tukeyHSD.ByGroup(var = "PO", groups = "Period", POdata)
 
 
+##### Comparisons by Periods with Ttests
 
+t_EOD1 <- t.test(plotData$ЕОД.1д, plotData$ЕОД.15д, paired = TRUE, 
+                           alt = "two.sided", conf.level = 0.95)
+t_EOD2 <- t.test(plotData$ЕОД.15д, plotData$ЕОД.30д, paired = TRUE, 
+                 alt = "two.sided", conf.level = 0.95)
+t_EOD3 <- t.test(plotData$ЕОД.30д, plotData$ЕОД.3м, paired = TRUE, 
+                 alt = "two.sided", conf.level = 0.95)
+t_EOD4 <- t.test(plotData$ЕОД.3м, plotData$ЕОД.6м, paired = TRUE, 
+                 alt = "two.sided", conf.level = 0.95)
+
+t_PO1 <- t.test(plotData$ПО.1д, plotData$ПО.15д, paired = TRUE, 
+                 alt = "two.sided", conf.level = 0.95)
+t_PO2 <- t.test(plotData$ПО.15д, plotData$ПО.30д, paired = TRUE, 
+                 alt = "two.sided", conf.level = 0.95)
+t_PO3 <- t.test(plotData$ПО.30д, plotData$ПО.3м, paired = TRUE, 
+                 alt = "two.sided", conf.level = 0.95)
+t_PO4 <- t.test(plotData$ПО.3м, plotData$ПО.6м, paired = TRUE, 
+                 alt = "two.sided", conf.level = 0.95)
+
+
+# output results
+# EOD comparisons by period
+t_EOD1_res <- ttest_res(t_EOD1)
+t_EOD1_res$Label <- "Сравняване средното на ЕОД (1д - 15д)"
+cols <- colnames(t_EOD1_res)
+t_EOD1_res <- cbind(t_EOD1_res[, ncol(t_EOD1_res)], t_EOD1_res[,-ncol(t_EOD1_res)])
+colnames(t_EOD1_res) <- c(cols[length(cols)], cols[-length(cols)])
+
+t_EOD2_res <- ttest_res(t_EOD2)
+t_EOD2_res$Label <- "Сравняване средното на ЕОД (15д - 30д)"
+cols <- colnames(t_EOD2_res)
+t_EOD2_res <- cbind(t_EOD2_res[, ncol(t_EOD2_res)], t_EOD2_res[,-ncol(t_EOD2_res)])
+colnames(t_EOD2_res) <- c(cols[length(cols)], cols[-length(cols)])
+
+t_EOD3_res <- ttest_res(t_EOD3)
+t_EOD3_res$Label <- "Сравняване средното на ЕОД (30д - 3м)"
+cols <- colnames(t_EOD3_res)
+t_EOD3_res <- cbind(t_EOD3_res[, ncol(t_EOD3_res)], t_EOD3_res[,-ncol(t_EOD3_res)])
+colnames(t_EOD3_res) <- c(cols[length(cols)], cols[-length(cols)])
+
+t_EOD4_res <- ttest_res(t_EOD4)
+t_EOD4_res$Label <- "Сравняване средното на ЕОД (3м - 6м)"
+cols <- colnames(t_EOD4_res)
+t_EOD4_res <- cbind(t_EOD4_res[, ncol(t_EOD4_res)], t_EOD4_res[,-ncol(t_EOD4_res)])
+colnames(t_EOD4_res) <- c(cols[length(cols)], cols[-length(cols)])
+
+
+# PO comparisons by period
+t_PO1_res <- ttest_res(t_PO1)
+t_PO1_res$Label <- "Сравняване средното на ПО (1д - 15д)"
+cols <- colnames(t_PO1_res)
+t_PO1_res <- cbind(t_PO1_res[, ncol(t_PO1_res)], t_PO1_res[,-ncol(t_PO1_res)])
+colnames(t_PO1_res) <- c(cols[length(cols)], cols[-length(cols)])
+
+t_PO2_res <- ttest_res(t_PO2)
+t_PO2_res$Label <- "Сравняване средното на ПО (15д - 30д)"
+cols <- colnames(t_PO2_res)
+t_PO2_res <- cbind(t_PO2_res[, ncol(t_PO2_res)], t_PO2_res[,-ncol(t_PO2_res)])
+colnames(t_PO2_res) <- c(cols[length(cols)], cols[-length(cols)])
+
+t_PO3_res <- ttest_res(t_PO3)
+t_PO3_res$Label <- "Сравняване средното на ПО (30д - 3м)"
+cols <- colnames(t_PO3_res)
+t_PO3_res <- cbind(t_PO3_res[, ncol(t_PO3_res)], t_PO3_res[,-ncol(t_PO3_res)])
+colnames(t_PO3_res) <- c(cols[length(cols)], cols[-length(cols)])
+
+t_PO4_res <- ttest_res(t_PO4)
+t_PO4_res$Label <- "Сравняване средното на ПО (3м - 6м)"
+cols <- colnames(t_PO4_res)
+t_PO4_res <- cbind(t_PO4_res[, ncol(t_PO4_res)], t_PO4_res[,-ncol(t_PO4_res)])
+colnames(t_PO4_res) <- c(cols[length(cols)], cols[-length(cols)])
+
+
+startrow <- 2
+
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", TukeyEODbyPeriods, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(TukeyEODbyPeriods) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", TukeyPObyPeriods, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(TukeyPObyPeriods) + startrow
+
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t_EOD1_res, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(t_EOD1_res) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t_EOD2_res, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(t_EOD2_res) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t_EOD3_res, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(t_EOD3_res) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t_EOD4_res, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(t_EOD4_res) + startrow
+
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t_PO1_res, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(t_PO1_res) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t_PO2_res, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(t_PO2_res) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t_PO3_res, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(t_PO3_res) + startrow
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t_PO4_res, sheet = "4.2", startRow = startrow)
+startrow = 4 + nrow(t_PO4_res) + startrow
 
 
 
@@ -218,4 +319,7 @@ writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t2_kids_res, sheet 
 # startrow = 4 + nrow(t2_kids_res) + startrow
 # writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", t2_adults_res, sheet = "4.5", startRow = startrow)
 
+
+
+file.rename("./Output/SummaryStats v1.xlsx", "./Output/SummaryStats v4.xlsx")
 
