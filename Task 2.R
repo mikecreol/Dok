@@ -3,6 +3,7 @@
 # Min и Max, Квантили, Хистограма. От таблица 2.2.
 #-------------------------------------------------------------------------------
 
+# Дескриптивна статистика интактни
 Data <- fillNAsWithUpperCell(DataList[[2]])
 # View(describe(Data))
 Data$Пол <- factor(Data$Пол, labels = c("Ж", "М"))
@@ -10,13 +11,57 @@ Data$Пушач <- as.factor(Data$Пушач)
 Data$`Зъбен.№` <- as.factor(Data$`Зъбен.№`)
 Data$Зъбна.група <- factor(Data$Зъбна.група, labels = c("фронт ГЧ", "премолари ГЧ", "молари ГЧ", "фронт ДЧ", "премолари ДЧ", "молари ДЧ"))
 
-# дескриптивна статистика, здрави зъби (всички пром.)
 A <- mapply(summaryDoc, Data[-1], colnames(Data)[-1])
+
+Data <- DataList[[2]]
+Data$Пол <- factor(Data$Пол, labels = c("Ж", "М"))
+Data$Пушач <- as.factor(Data$Пушач)
+B <- mapply(summaryDoc, Data[-1], colnames(Data)[-1])
+A[[1]] <- B[[1]]
+A[[2]] <- B[[2]]
+A[[3]] <- B[[3]]
 listToExcel(A, filename = "./Output/SummaryStats v1.xlsx", sheetname = "2")
 
 # ПО - дескриптивна статистика, хистограма
 POsummary <- summaryDoc(Data$ПО, varName="ПО")
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", POsummary, sheet = "2_ПО", startRow = 1)
+
+# Дескриптивна статистика силикон
+Data <- fillNAsWithUpperCell(DataList[[1]])
+Data$Пол <- factor(Data$Пол, labels = c("Ж", "М"))
+Data$`Зъбен.№` <- as.factor(Data$`Зъбен.№`)
+
+A <- mapply(summaryDoc, Data[-1], colnames(Data)[-1])
+
+Data <- DataList[[1]]
+Data <- fillNAsWithUpperCell(DataList[[1]])
+Data$Пол <- factor(Data$Пол, labels = c("Ж", "М"))
+Data$`Зъбен.№` <- as.factor(Data$`Зъбен.№`)
+B <- mapply(summaryDoc, Data[-1], colnames(Data)[-1])
+A[[1]] <- B[[1]]
+A[[2]] <- B[[2]]
+listToExcel(A, filename = "./Output/SummaryStats v1.xlsx", sheetname = "2")
+
+# Дескриптивна статистика мъртви
+Data <- fillNAsWithUpperCell(DataList[[3]])
+# View(describe(Data))
+Data$Пол <- factor(Data$Пол, labels = c("Ж", "М"))
+Data$`Зъб.№` <- as.factor(Data$`Зъб.№`)
+Data$Диагноза <- factor(Data$Диагноза, labels = c("Dev. Pro causa prot.", "Pulp.irr (sympt)", "Gangrena", "cysta rad."))
+
+A <- mapply(summaryDoc, Data[-1], colnames(Data)[-1])
+
+listToExcel(A, filename = "./Output/SummaryStats v1.xlsx", sheetname = "2")
+
+# Confidence intervals
+# DataTrim <- Data[!(Data$ПО < 65 | Data$ПО > 96),]
+DataTrim <- Data[!(Data$ПО < 75 | Data$ПО > 96),]
+a <- DataTrim$ПО
+summary(a)
+quantile(DataTrim$ПО, seq(0,1, 0.1))
+a <- qqnorm(DataTrim$ПО)
+POsummary <- summaryDoc(DataTrim$ПО, varName="ПО")
+a <- (DataTrim$ПО - mean(DataTrim$ПО)) / sd(DataTrim$ПО)
 
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", CIquantile(Data$ПО, 5), sheet = "2_ПО", startRow = 20)
 
@@ -127,4 +172,53 @@ writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", corData, sheet = "2
 startrow <- startrow + nrow(corData) + 4
 writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", TukeyPO, sheet = "2.2", 
                      startRow = startrow)
+
+# 2.3. Сравнение между живи и мъртви
+#-------------------------------------------------------------------------------
+
+Data2 <- fillNAsWithUpperCell(DataList[[2]])
+Data2 <- Data2[!(Data2$ПО < 75 | Data2$ПО > 96),]
+Data3 <- DataList[[3]]
+
+startrow <- 2
+
+t1 <- t.test(Data2$ПО, Data3$`ПО.(%)`, paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
+PO_two.sided <- ttest_res(t1)
+PO_two.sided <- MyHelperFunctions::myRename(PO_two.sided, c("mean.x", "mean.y"), c("Здрави ПО", "Мъртви ПО.(%)"))
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_two.sided, sheet = "2.3", startRow = startrow)
+startrow <- startrow + 5
+
+t1 <- t.test(Data2$ПО, Data3$`ПО.след.ВЕ.(%)`, paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
+PO_two.sided <- ttest_res(t1)
+PO_two.sided <- MyHelperFunctions::myRename(PO_two.sided, c("mean.x", "mean.y"), c("Здрави ПО", "Мъртви ПО.след.ВЕ.(%)"))
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_two.sided, sheet = "2.3", startRow = startrow)
+startrow <- startrow + 5
+
+t1 <- t.test(Data2$ПО, Data3$`ПО.след.обт..(%)`, paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
+PO_two.sided <- ttest_res(t1)
+PO_two.sided <- MyHelperFunctions::myRename(PO_two.sided, c("mean.x", "mean.y"), c("Здрави ПО", "Мъртви ПО.след.обт..(%)"))
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_two.sided, sheet = "2.3", startRow = startrow)
+startrow <- startrow + 5
+
+# EOD
+
+t1 <- t.test(Data2$ЕОД, Data3[, 7], paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
+PO_two.sided <- ttest_res(t1)
+PO_two.sided <- MyHelperFunctions::myRename(PO_two.sided, c("mean.x", "mean.y"), c("Здрави ЕОД", "Мъртви ЕОД.(μА)"))
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_two.sided, sheet = "2.3", startRow = startrow)
+startrow <- startrow + 5
+
+t1 <- t.test(Data2$ЕОД, Data3[, 9], paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
+PO_two.sided <- ttest_res(t1)
+PO_two.sided <- MyHelperFunctions::myRename(PO_two.sided, c("mean.x", "mean.y"), c("Здрави ЕОД", "Мъртви ЕОД.след.ВЕ.(μА)"))
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_two.sided, sheet = "2.3", startRow = startrow)
+startrow <- startrow + 5
+
+t1 <- t.test(Data2$ЕОД, Data3[, 11], paired = FALSE, alt = "two.sided", conf.level = 0.95) # p-value = 0.02013
+PO_two.sided <- ttest_res(t1)
+PO_two.sided <- MyHelperFunctions::myRename(PO_two.sided, c("mean.x", "mean.y"), c("Здрави ЕОД", "ЕОД.след.обт..(μА)"))
+writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", PO_two.sided, sheet = "2.3", startRow = startrow)
+startrow <- startrow + 5
+
+
 

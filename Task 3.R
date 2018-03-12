@@ -57,6 +57,19 @@ for (i in 1:3){
   startrow = 4 + nrow(CIdf) + startrow
 }
 
+for (i in 1:3){
+  
+  writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", 
+                       CI2(diagnoses[[i]]$ПО), sheet = "3.1", 
+                       startRow = (i-1)*10 + 2,
+                       rownames = row.names(CI2(diagnoses[[i]]$ПО)))
+  
+  writeWorksheetToFile(file = "./Output/SummaryStats v1.xlsx", 
+                       CI2(diagnoses[[i]]$ЕОД), sheet = "3.1", 
+                       startRow = (i-1)*10 + 6,
+                       rownames = row.names(CI2(diagnoses[[i]]$ПО)))
+  
+}  
 
 # 3.2. Средни стойности на ЕОД и ПО по диагнози сравнени с определените стойности от 2.2. T test
 #-------------------------------------------------------------------------------

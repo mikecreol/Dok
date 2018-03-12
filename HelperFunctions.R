@@ -1,4 +1,64 @@
 
+TukeyHSD2 <- function (x, which = seq_along(tabs), ordered = FALSE, conf.level = 0.95, 
+          ...) 
+{
+  mm <- model.tables(x, "means")
+  if (is.null(mm$n)) 
+    stop("no factors in the fitted model")
+  tabs <- mm$tables
+  if (names(tabs)[1L] == "Grand mean") 
+    tabs <- tabs[-1L]
+  tabs <- tabs[which]
+  nn <- mm$n[names(tabs)]
+  nn_na <- is.na(nn)
+  if (all(nn_na)) 
+    stop("'which' specified no factors")
+  if (any(nn_na)) {
+    warning("'which' specified some non-factors which will be dropped")
+    tabs <- tabs[!nn_na]
+    nn <- nn[!nn_na]
+  }
+  out <- setNames(vector("list", length(tabs)), names(tabs))
+  MSE <- sum(x$residuals^2)/x$df.residual
+  for (nm in names(tabs)) {
+    tab <- tabs[[nm]]
+    means <- as.vector(tab)
+    nms <- if (length(dim(tab)) > 1L) {
+      dn <- dimnames(tab)
+      apply(do.call("expand.grid", dn), 1L, paste, collapse = ":")
+    }
+    else names(tab)
+    n <- nn[[nm]]
+    if (length(n) < length(means)) 
+      n <- rep.int(n, length(means))
+    if (as.logical(ordered)) {
+      ord <- order(means)
+      means <- means[ord]
+      n <- n[ord]
+      if (!is.null(nms)) 
+        nms <- nms[ord]
+    }
+    center <- outer(means, means, "-")
+    keep <- lower.tri(center)
+    center <- center[keep]
+    width <- qtukey(conf.level, length(means), x$df.residual) * 
+      sqrt((MSE/2) * outer(1/n, 1/n, "+"))[keep]
+    est <- center/(sqrt((MSE/2) * outer(1/n, 1/n, "+"))[keep])
+    pvals <- ptukey(abs(est), length(means), x$df.residual, 
+                    lower.tail = FALSE)
+    dnames <- list(NULL, c("diff", "lwr", "upr", "p adj"))
+    if (!is.null(nms)) 
+      dnames[[1L]] <- outer(nms, nms, paste, sep = "-")[keep]
+    out[[nm]] <- array(c(center, center - width, center + 
+                           width, pvals), c(length(width), 4L), dnames)
+  }
+  class(out) <- c("TukeyHSD", "multicomp")
+  attr(out, "orig.call") <- x$call
+  attr(out, "conf.level") <- conf.level
+  attr(out, "ordered") <- ordered
+  attr(out, "est") <- est
+  out
+}
 
 summaryDoc <- function(x, varName = deparse(substitute(x))){
   # Usage
@@ -93,6 +153,22 @@ tukeyHSD.ByGroup <- function(var, groups, data1, ...){
 }
 
 
+tukeyHSD2.ByGroup <- function(var, groups, data1, ...){
+  
+  f1 <- formula(paste(var, "~", groups))
+  a1 <- aov(f1, data = data1)
+  a <- TukeyHSD2(a1, ...)
+  
+  p_adj <- a[[1]][ , "p adj"]
+  signif <- ifelse(p_adj <= 0.05, "Significant", "Non Significant")
+  res <- data.frame(P.Adj = p_adj, Significance = signif)
+  res$Comparisons <- row.names(res)
+  res$T_values <- attributes(a)$est
+  res <- res[, c("Comparisons", "P.Adj", "Significance", "T_values")]
+  
+  return(res)
+}
+
 CI <- function(x) {
   
   n <- length(na.omit(x))
@@ -109,6 +185,28 @@ CI <- function(x) {
   return(Df)
 }
 
+
+CI2 <- function(x) {
+  # returns two intervals 2 times the standard deviation 
+  # and 1.5 by the IQR
+  
+  n <- length(na.omit(x))
+  mean <- mean(x, na.rm = T)
+  sd <- sd(x, na.rm = T)
+  low95ci <- max(mean - 2 * sd, min(x))
+  high95ci <- min(mean + 2 * sd, max(x))
+  
+  Df <- as.data.frame(cbind(low95ci, high95ci))
+  
+  low95ci <- max(min(x), median(x, na.rm = TRUE) - 1.5 * IQR(x, na.rm = TRUE))
+  high95ci <- min(max(x), median(x, na.rm = TRUE) + 1.5 * IQR(x, na.rm = TRUE))
+  
+  Df <- rbind(Df, cbind(low95ci, high95ci))
+  colnames(Df) <- c("low", "high")
+  rownames(Df) <- c("SD", "IQR");
+  
+  return(Df)
+}
 
 ttest_res <- function(tt) {
   
