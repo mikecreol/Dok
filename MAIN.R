@@ -22,6 +22,8 @@ library(xtable)
 library(XLConnect)
 library(ggplot2)
 library(reshape2)
+library(gmodels)
+library(MASS)
 
 #-----------------------------------------------------------------------------------------------
 
